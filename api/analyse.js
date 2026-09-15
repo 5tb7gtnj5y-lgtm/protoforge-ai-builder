@@ -4,7 +4,7 @@ import { z } from "zod";
 const MAX_SOURCE_CHARS = 20_000;
 const MAX_INSTRUCTION_CHARS = 4_000;
 const MAX_IMAGE_DATA_URL_CHARS = 3_500_000;
-const MODEL = process.env.AI_GATEWAY_MODEL || "openai/gpt-6-astra";
+const MODEL = process.env.AI_GATEWAY_MODEL || "openai/gpt-5.6-sol";
 
 const screenSchema = z.object({
   name: z.string().min(1).max(80),
@@ -130,7 +130,12 @@ REQUIREMENTS:
     const result = await generateText({
       model: MODEL,
       output: Output.object({ schema: buildSchema }),
-      maxOutputTokens: 24_000,
+      maxOutputTokens: 16_000,
+      providerOptions: {
+        gateway: {
+          tags: ["app:protoforge", "feature:prototype-build"],
+        },
+      },
       messages: [{ role: "user", content: userContent }],
     });
 
@@ -152,13 +157,20 @@ REQUIREMENTS:
       },
     });
   } catch (error) {
+    const errorMessage = String(error?.message || "");
+    const billingRequired =
+      /credit card|payment method|billing|unlock.*credits/i.test(errorMessage);
+
     console.error("ProtoForge AI build failed", {
       name: error?.name,
-      message: error?.message,
+      message: errorMessage,
     });
 
     return response.status(503).json({
-      error: "AI prototype generation is temporarily unavailable",
+      error: billingRequired
+        ? "The AI Gateway owner must enable Vercel billing before image generation can run."
+        : "AI prototype generation is temporarily unavailable",
+      code: billingRequired ? "AI_GATEWAY_BILLING_REQUIRED" : "AI_BUILD_FAILED",
       fallback: "local-builder",
     });
   }
