@@ -1,11 +1,22 @@
 import { generateText, Output } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 
 const MAX_SOURCE_CHARS = 20_000;
 const MAX_INSTRUCTION_CHARS = 4_000;
 const MAX_IMAGE_DATA_URL_CHARS = 3_500_000;
-const MODEL =
+const GATEWAY_MODEL =
   process.env.AI_GATEWAY_MODEL || "inclusionai/ling-3.0-flash-vl-free";
+const GOOGLE_MODEL = process.env.GOOGLE_AI_MODEL || "gemini-3.8-flash";
+const GOOGLE_API_KEY =
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+  process.env.GEMINI_API_KEY ||
+  process.env.GOOGLE_API_KEY;
+const USING_GOOGLE_FREE_TIER = Boolean(GOOGLE_API_KEY);
+const MODEL_ID = USING_GOOGLE_FREE_TIER ? GOOGLE_MODEL : GATEWAY_MODEL;
+const MODEL = USING_GOOGLE_FREE_TIER
+  ? createGoogleGenerativeAI({ apiKey: GOOGLE_API_KEY })(GOOGLE_MODEL)
+  : GATEWAY_MODEL;
 
 const screenSchema = z.object({
   name: z.string().min(1).max(80),
@@ -127,17 +138,22 @@ REQUIREMENTS:
   }
 
   try {
-    const result = await generateText({
+    const generationOptions = {
       model: MODEL,
       output: Output.object({ schema: buildSchema }),
       maxOutputTokens: 16_000,
-      providerOptions: {
+      messages: [{ role: "user", content: userContent }],
+    };
+
+    if (!USING_GOOGLE_FREE_TIER) {
+      generationOptions.providerOptions = {
         gateway: {
           tags: ["app:protoforge", "feature:prototype-build"],
         },
-      },
-      messages: [{ role: "user", content: userContent }],
-    });
+      };
+    }
+
+    const result = await generateText(generationOptions);
 
     const build = result.output;
 
@@ -151,8 +167,10 @@ REQUIREMENTS:
       },
       html: build.html,
       gateway: {
-        provider: "vercel-ai-gateway",
-        model: MODEL,
+        provider: USING_GOOGLE_FREE_TIER
+          ? "google-gemini-free-tier"
+          : "vercel-ai-gateway",
+        model: MODEL_ID,
         usage: result.usage,
       },
     });
@@ -160,9 +178,25 @@ REQUIREMENTS:
     const errorMessage = String(error?.message || "");
     const billingRequired =
       /credit card|payment method|billing|unlock.*credits/i.test(errorMessage);
+    const freeKeyRequired = !USING_GOOGLE_FREE_TIER && billingRequired;
     const rateLimited = /rate limit|too many requests|\b429\b/i.test(
       errorMessage,
     );
+    let publicError = "AI prototype generation is temporarily unavailable";
+    let publicCode = "AI_BUILD_FAILED";
+
+    if (freeKeyRequired) {
+      publicError =
+        "Add a free Google AI Studio API key to enable image-to-prototype generation without a bank card.";
+      publicCode = "FREE_AI_KEY_REQUIRED";
+    } else if (billingRequired) {
+      publicError =
+        "The AI provider requires billing before image generation can run.";
+      publicCode = "AI_BILLING_REQUIRED";
+    } else if (rateLimited) {
+      publicError = "The free AI model is busy. Please wait a moment and try again.";
+      publicCode = "AI_FREE_MODEL_RATE_LIMITED";
+    }
 
     console.error("ProtoForge AI build failed", {
       name: error?.name,
@@ -170,16 +204,8 @@ REQUIREMENTS:
     });
 
     return response.status(503).json({
-      error: billingRequired
-        ? "The AI Gateway owner must enable Vercel billing before image generation can run."
-        : rateLimited
-          ? "The free AI model is busy. Please wait a moment and try again."
-        : "AI prototype generation is temporarily unavailable",
-      code: billingRequired
-        ? "AI_GATEWAY_BILLING_REQUIRED"
-        : rateLimited
-          ? "AI_FREE_MODEL_RATE_LIMITED"
-          : "AI_BUILD_FAILED",
+      error: publicError,
+      code: publicCode,
       fallback: "local-builder",
     });
   }
