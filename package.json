@@ -1,8 +1,8 @@
 {
   "name": "protoforge-ai-builder",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Turn documents, notes, and images into editable working web prototypes.",
+  "description": "Turn an uploaded image or document plus an instruction into a working web prototype.",
   "type": "module",
   "scripts": {
     "check": "node --check api/health.js && node --check api/analyse.js",
