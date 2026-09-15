@@ -1,5 +1,5 @@
 const SERVICE = "protoforge-ai-builder";
-const MODEL = process.env.AI_GATEWAY_MODEL || "openai/gpt-6-astra";
+const MODEL = process.env.AI_GATEWAY_MODEL || "openai/gpt-5.6-sol";
 
 export default function handler(request, response) {
   response.setHeader("Cache-Control", "no-store");
