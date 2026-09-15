@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProtoForge — Source to Working Prototype</title>
+  <meta name="description" content="Turn requirements, documents and images into editable working web prototypes." />
+  <style>
+    :root{
+      --bg:#f4f6f8;--panel:#fff;--ink:#111827;--muted:#5b6472;--line:#dce2e8;
+      --brand:#0b5fff;--brand2:#0047c7;--good:#087443;--warn:#9a5b00;--bad:#b42318;
+      --radius:14px;--shadow:0 12px 34px rgba(18,38,63,.08)
+    }
+    *{box-sizing:border-box} html,body{height:100%} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+    button,input,textarea,select{font:inherit} button{cursor:pointer}
+    .topbar{height:64px;background:#111827;color:#fff;display:flex;align-items:center;gap:14px;padding:0 20px;position:sticky;top:0;z-index:20;box-shadow:0 2px 16px rgba(0,0,0,.12)}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:-.02em}.logoMark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#4f8cff,#a8c6ff);display:grid;place-items:center;color:#071a43;font-weight:950}.tag{font-size:12px;color:#cdd5df;border-left:1px solid #4a5568;padding-left:14px}.topActions{margin-left:auto;display:flex;gap:8px}
+    .btn{border:1px solid var(--line);background:#fff;color:#172033;border-radius:10px;padding:9px 13px;font-weight:700;display:inline-flex;align-items:center;gap:7px;justify-content:center}.btn:hover{background:#f8fafc}.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}.btn.primary:hover{background:var(--brand2)}.btn.dark{background:#1f2937;border-color:#374151;color:#fff}.btn.ghostDark{background:transparent;border-color:#4b5563;color:#fff}.btn.small{padding:6px 9px;font-size:12px}.btn.danger{color:var(--bad)}
+    .layout{display:grid;grid-template-columns:minmax(260px,30%) minmax(280px,32%) minmax(380px,38%);height:calc(100vh - 64px);min-height:620px}.col{border-right:1px solid var(--line);min-width:0;display:flex;flex-direction:column;background:#f9fafb}.col:last-child{border-right:0;background:#e9eef4}.colHead{background:#fff;border-bottom:1px solid var(--line);padding:13px 16px;display:flex;align-items:center;gap:10px;min-height:58px}.colHead h2{font-size:14px;margin:0;font-weight:850}.num{width:27px;height:27px;border-radius:8px;background:#e8efff;color:#174ca6;display:grid;place-items:center;font-weight:900;font-size:12px}.colHead .mini{margin-left:auto;font-size:11px;color:var(--muted)}.scroll{padding:14px;overflow:auto;flex:1}
+    .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 2px 10px rgba(18,38,63,.03);margin-bottom:12px}.cardPad{padding:14px}.cardTitle{font-weight:850;font-size:13px;margin-bottom:5px}.help{font-size:12px;line-height:1.45;color:var(--muted)}
+    .drop{border:2px dashed #b8c4d2;border-radius:13px;padding:22px 16px;text-align:center;background:#fbfdff;transition:.15s}.drop.drag{background:#edf4ff;border-color:var(--brand)}.drop strong{display:block;margin-bottom:4px}.drop .fileBtn{margin-top:10px}.uploadChoices{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}.picker{position:relative;display:inline-flex}.picker .btnFace{pointer-events:none}.picker input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}.picker.photo .btnFace{background:var(--brand);border-color:var(--brand);color:#fff}.picker.photo .btnFace:hover{background:var(--brand2)}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.chip{font-size:10px;border:1px solid #d7dee7;background:#f8fafc;padding:4px 7px;border-radius:999px;color:#4b5563;font-weight:700}
+    .label{display:block;font-size:11px;font-weight:800;color:#4b5563;margin:0 0 6px}.textArea{width:100%;min-height:250px;border:1px solid #cfd8e3;border-radius:10px;padding:11px;resize:vertical;outline:none;background:#fff;line-height:1.45}.textArea:focus,input:focus,select:focus{border-color:#77a5ff;box-shadow:0 0 0 3px rgba(11,95,255,.10);outline:none}.field{width:100%;border:1px solid #cfd8e3;border-radius:9px;padding:9px 10px;background:#fff}.row{display:flex;gap:8px;align-items:center}.row>*{min-width:0}.row .grow{flex:1}.stack{display:grid;gap:9px}.status{font-size:11px;border-radius:8px;padding:8px 9px;background:#eef7f2;color:#0a6b42;border:1px solid #cbe8da;display:none}.status.show{display:block}.status.warn{background:#fff8e8;color:#835500;border-color:#f1dfad}.status.bad{background:#fff1f0;color:#9f1c13;border-color:#f4c8c5}
+    .sourcePreview{display:none;max-height:160px;overflow:auto;border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.sourcePreview img{max-width:100%;max-height:145px;border-radius:8px;border:1px solid var(--line)}
+    .summaryBox{display:grid;grid-template-columns:1fr 1fr;gap:7px}.stat{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fbfcfe}.stat b{font-size:18px;display:block}.stat span{font-size:10px;color:var(--muted);font-weight:700}
+    .screenList{display:grid;gap:7px}.screenItem{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px}.screenTop{display:flex;align-items:center;gap:8px}.screenTop input{font-weight:800}.badge{font-size:10px;background:#eef3ff;color:#2d5cab;border-radius:999px;padding:3px 6px;font-weight:800}.screenActions{margin-left:auto;display:flex;gap:4px}.screenMeta{font-size:11px;color:var(--muted);margin-top:5px}.tinyIcon{width:27px;height:27px;border:1px solid var(--line);background:#fff;border-radius:8px;display:grid;place-items:center}.tinyIcon:hover{background:#f4f6f8}
+    .commandBox{display:grid;grid-template-columns:1fr auto;gap:7px}.commandBox input{width:100%;border:1px solid #cfd8e3;border-radius:9px;padding:9px 10px}.examples{font-size:10px;color:#697386;margin-top:7px;line-height:1.45}
+    .previewTools{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.deviceGroup{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}.deviceGroup button{border:0;border-right:1px solid var(--line);background:#fff;padding:7px 10px}.deviceGroup button:last-child{border-right:0}.deviceGroup button.active{background:#eaf1ff;color:#154ea6;font-weight:800}.previewStage{flex:1;display:grid;place-items:center;padding:14px;overflow:auto}.device{background:#fff;box-shadow:var(--shadow);border:1px solid #bac4d0;overflow:hidden;transition:.2s;width:100%;height:100%;max-width:100%}.device.desktop{border-radius:8px}.device.tablet{width:820px;height:92%;border-radius:20px}.device.mobile{width:390px;height:92%;border-radius:30px;border-width:8px}.device iframe{width:100%;height:100%;border:0;background:#fff}.emptyPreview{color:#64748b;text-align:center;padding:30px}.emptyPreview .big{font-size:45px;opacity:.5}.emptyPreview h3{margin:8px 0 3px;color:#354052}
+    .modalBackdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}.modalBackdrop.show{display:flex}.modal{background:#fff;border-radius:16px;width:min(680px,100%);max-height:85vh;overflow:auto;box-shadow:0 30px 90px rgba(0,0,0,.3)}.modalHead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center}.modalHead h3{margin:0;font-size:16px}.modalBody{padding:18px}.modalFoot{padding:13px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+    .toggle{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#4b5563}.toggle input{accent-color:var(--brand)}
+    .fileName{font-weight:800;color:#25334a;word-break:break-word}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    @media(max-width:1050px){.layout{grid-template-columns:1fr 1fr;height:auto}.col{min-height:720px}.col:last-child{grid-column:1/-1;height:760px}.tag{display:none}}
+    @media(max-width:700px){.layout{display:block}.col{min-height:auto;height:auto}.scroll{max-height:none}.col:last-child{height:680px}.topActions .hideMobile{display:none}.topbar{padding:0 12px}.previewStage{height:590px}.device.mobile{width:360px}.summaryBox{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo"><span class="logoMark">P</span> ProtoForge</div>
+    <div class="tag">Source → specification → working prototype</div>
+    <div class="topActions">
+      <button class="btn ghostDark hideMobile" id="newBtn">New project</button>
+      <button class="btn ghostDark" id="saveBtn">Save</button>
+      <button class="btn primary" id="exportBtn">Export HTML</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="col">
+      <div class="colHead"><span class="num">1</span><h2>Source</h2><span class="mini">Upload or paste</span></div>
+      <div class="scroll">
+        <div class="card"><div class="cardPad">
+          <div class="drop" id="dropZone">
+            <strong>Drop a file here</strong>
+            <div class="help">Requirements, notes, Word, PDF, screenshot or sketch</div>
+            <div class="uploadChoices">
+              <label class="picker photo"><span class="btn btnFace">📷 Add photo</span><input id="photoInput" type="file" accept="image/*" aria-label="Add photo" /></label>
+              <label class="picker"><span class="btn btnFace">📄 Choose document</span><input id="fileInput" type="file" accept=".txt,.md,.csv,.json,.html,.xml,.docx,.pdf" aria-label="Choose document" /></label>
+            </div>
+            <div class="chips"><span class="chip">TXT</span><span class="chip">DOCX</span><span class="chip">PDF</span><span class="chip">PNG/JPG</span><span class="chip">PASTE TEXT</span></div>
+          </div>
+          <div class="sourcePreview" id="sourcePreview"></div>
+        </div></div>
+
+        <div class="card"><div class="cardPad">
+          <label class="label" for="sourceText">Or paste requirements / notes</label>
+          <textarea id="sourceText" class="textArea" placeholder="Example:\nCustomer claims app\n\nScreen: Home\n- Search claims\n- Add new claim\n\nScreen: New claim\nFields: Name, National Insurance number, Claim type, Date\nButton: Save and continue\n\nScreen: Review\nButton: Submit claim"></textarea>
+          <div class="row" style="margin-top:9px">
+            <select class="field grow" id="styleSelect" aria-label="Prototype style">
+              <option value="modern">Modern service</option>
+              <option value="govuk">GOV.UK inspired</option>
+              <option value="dashboard">Dashboard</option>
+              <option value="mobile">Mobile app</option>
+            </select>
+            <button class="btn primary" id="analyseBtn">Analyse source</button>
+          </div>
+          <div class="status" id="sourceStatus"></div>
+        </div></div>
+
+        <div class="card"><div class="cardPad">
+          <div class="cardTitle">How this version works</div>
+          <div class="help">It first tries the optional AI analyser when available. If it is not configured, ProtoForge uses its built-in local builder, so prototype generation still works.</div>
+        </div></div>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="colHead"><span class="num">2</span><h2>App specification</h2><span class="mini">Review before building</span></div>
+      <div class="scroll">
+        <div class="card"><div class="cardPad">
+          <div class="row"><div class="grow"><label class="label">App name</label><input id="appName" class="field" value="My Prototype" /></div><div style="width:130px"><label class="label">Theme</label><select id="themeSelect" class="field"><option value="blue">Blue</option><option value="green">Green</option><option value="purple">Purple</option><option value="slate">Slate</option></select></div></div>
+          <div class="divider"></div>
+          <div class="summaryBox"><div class="stat"><b id="screenCount">0</b><span>SCREENS</span></div><div class="stat"><b id="controlCount">0</b><span>CONTROLS</span></div></div>
+        </div></div>
+
+        <div class="card"><div class="cardPad">
+          <div class="row" style="margin-bottom:9px"><div class="cardTitle grow" style="margin:0">Screens & flow</div><button id="addScreenBtn" class="btn small">+ Add screen</button></div>
+          <div id="screenList" class="screenList"><div class="help">Analyse your source to generate the first app plan.</div></div>
+        </div></div>
+
+        <div class="card"><div class="cardPad">
+          <div class="cardTitle">Change the prototype</div>
+          <div class="help" style="margin-bottom:8px">Type a simple instruction. Changes are applied to the specification and preview.</div>
+          <div class="commandBox"><input id="commandInput" placeholder="e.g. add a confirmation screen" /><button id="commandBtn" class="btn dark">Apply</button></div>
+          <div class="examples">Try: “make it GOV.UK”, “add a login screen”, “add search”, “change title to Claims Manager”, “add a name field”.</div>
+        </div></div>
+
+        <button class="btn primary" id="buildBtn" style="width:100%;padding:13px">BUILD WORKING PROTOTYPE</button>
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="colHead"><span class="num">3</span><h2>Live prototype</h2><div class="mini previewTools"><div class="deviceGroup"><button class="active" data-device="desktop">Desktop</button><button data-device="tablet">Tablet</button><button data-device="mobile">Mobile</button></div><button id="refreshBtn" class="btn small">↻</button></div></div>
+      <div class="previewStage">
+        <div id="device" class="device desktop">
+          <div id="emptyPreview" class="emptyPreview"><div class="big">◫</div><h3>Your working prototype appears here</h3><div>Analyse a source, review the app plan, then press Build.</div></div>
+          <iframe id="previewFrame" title="Generated prototype" style="display:none"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modalBackdrop" id="screenModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modalHead"><h3 id="modalTitle">Edit screen</h3><button class="tinyIcon" id="closeModal" style="margin-left:auto">×</button></div>
+      <div class="modalBody stack">
+        <div><label class="label">Screen name</label><input id="editScreenName" class="field" /></div>
+        <div><label class="label">Heading</label><input id="editScreenHeading" class="field" /></div>
+        <div><label class="label">Intro text</label><textarea id="editScreenIntro" class="textArea" style="min-height:80px"></textarea></div>
+        <div><label class="label">Fields — one per line</label><textarea id="editScreenFields" class="textArea" style="min-height:110px" placeholder="Full name\nEmail address\nDate of birth"></textarea></div>
+        <div><label class="label">Buttons — one per line</label><textarea id="editScreenButtons" class="textArea" style="min-height:90px" placeholder="Save and continue\nCancel"></textarea></div>
+      </div>
+      <div class="modalFoot"><button class="btn" id="cancelModal">Cancel</button><button class="btn primary" id="saveScreenEdit">Save screen</button></div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const els = {
+    drop: $('#dropZone'), file: $('#fileInput'), photo: $('#photoInput'), source: $('#sourceText'), status: $('#sourceStatus'), sourcePreview: $('#sourcePreview'),
+    analyse: $('#analyseBtn'), style: $('#styleSelect'), appName: $('#appName'), theme: $('#themeSelect'), screenList: $('#screenList'),
+    screenCount: $('#screenCount'), controlCount: $('#controlCount'), build: $('#buildBtn'), frame: $('#previewFrame'), empty: $('#emptyPreview'),
+    device: $('#device'), export: $('#exportBtn'), save: $('#saveBtn'), newBtn: $('#newBtn'), addScreen: $('#addScreenBtn'), refresh: $('#refreshBtn'),
+    command: $('#commandInput'), commandBtn: $('#commandBtn'), modal: $('#screenModal'), editName: $('#editScreenName'), editHeading: $('#editScreenHeading'),
+    editIntro: $('#editScreenIntro'), editFields: $('#editScreenFields'), editButtons: $('#editScreenButtons')
+  };
+  let spec = freshSpec();
+  let editingIndex = -1;
+  let lastPrototype = '';
+  let activeFileDataUrl = '';
+
+  function freshSpec(){return {name:'My Prototype', style:'modern', theme:'blue', screens:[]};}
+  function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+  function slug(s='screen'){return String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'screen';}
+  function titleCase(s=''){return String(s).replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()).trim();}
+  function uniq(arr){return [...new Set(arr.map(x=>String(x).trim()).filter(Boolean))];}
+  function showStatus(msg,type='good'){els.status.textContent=msg;els.status.className='status show'+(type==='warn'?' warn':type==='bad'?' bad':'');}
+  function clearStatus(){els.status.className='status';}
+
+  function defaultScreens(name='My Prototype'){
+    return [
+      {name:'Home',heading:name,intro:'Choose what you want to do.',fields:[],buttons:['Get started','Search']},
+      {name:'Details',heading:'Enter details',intro:'Complete the information below.',fields:['Full name','Email address'],buttons:['Save and continue','Back']},
+      {name:'Review',heading:'Check your answers',intro:'Review the information before continuing.',fields:[],buttons:['Submit','Back']},
+      {name:'Confirmation',heading:'Complete',intro:'Your information has been submitted successfully.',fields:[],buttons:['Return home']}
+    ];
+  }
+
+  function inferName(text){
+    const lines=text.split(/\n/).map(x=>x.trim()).filter(Boolean);
+    const explicit=lines.find(l=>/^(app|application|service|project)\s*(name)?\s*[:\-]/i.test(l));
+    if(explicit) return titleCase(explicit.replace(/^[^:\-]+[:\-]\s*/,'').slice(0,60));
+    const first=lines.find(l=>l.length>2&&l.length<70&&!/^[-*•\d]/.test(l));
+    return first?titleCase(first.replace(/^#+\s*/,'')):'My Prototype';
+  }
+
+  function inferFields(block){
+    const fields=[];
+    const fieldLine=block.match(/(?:fields?|inputs?)\s*[:\-]\s*([^\n]+)/i);
+    if(fieldLine) fields.push(...fieldLine[1].split(/[,;|]/));
+    const common=[
+      ['full name',/\b(full\s+name|your\s+name|customer\s+name|claimant\s+name)\b/i],['First name',/\bfirst\s+name\b/i],['Last name',/\b(last\s+name|surname)\b/i],
+      ['Email address',/\bemail\b/i],['Phone number',/\b(phone|telephone|mobile number)\b/i],['Address',/\baddress\b/i],['Postcode',/\bpostcode\b/i],
+      ['Date of birth',/\b(date of birth|dob)\b/i],['Date',/\bdate\b/i],['National Insurance number',/\b(national insurance|nino|ni number)\b/i],
+      ['Reference number',/\b(reference|ref number|case number|claim number)\b/i],['Amount',/\b(amount|value|cost|price)\b/i],['Description',/\b(description|details|notes|comments)\b/i]
+    ];
+    common.forEach(([label,re])=>{if(re.test(block))fields.push(label)});
+    block.split(/\n/).forEach(line=>{
+      let m=line.match(/^\s*(?:field|input|textbox|select|dropdown)\s*[:\-]\s*(.+)$/i); if(m) fields.push(m[1]);
+      m=line.match(/^\s*[-*•]\s*(?:enter|capture|record|ask for)\s+(.{2,45})$/i); if(m) fields.push(m[1]);
+    });
+    return uniq(fields).slice(0,10);
+  }
+
+  function inferButtons(block){
+    const buttons=[];
+    block.split(/\n/).forEach(line=>{
+      let m=line.match(/^\s*(?:button|action|cta)\s*[:\-]\s*(.+)$/i); if(m) buttons.push(...m[1].split(/[,;|]/));
+      m=line.match(/^\s*[-*•]\s*(search|submit|save(?: and continue)?|continue|next|back|cancel|add(?: new)?[^,.;]*|edit|delete|confirm|start|sign in|log in|return home)\b/i); if(m) buttons.push(m[1]);
+    });
+    const verbs=[['Search',/\bsearch\b/i],['Submit',/\bsubmit\b/i],['Save and continue',/\bsave and continue\b/i],['Save',/\bsave\b/i],['Add new',/\badd new\b/i],['Edit',/\bedit\b/i],['Delete',/\bdelete\b/i],['Sign in',/\b(sign in|log in|login)\b/i]];
+    verbs.forEach(([b,re])=>{if(re.test(block)&&!buttons.some(x=>x.toLowerCase().includes(b.toLowerCase())))buttons.push(b)});
+    return uniq(buttons).slice(0,7);
+  }
+
+  function localAnalyse(text){
+    text=(text||'').replace(/\r/g,'').trim();
+    const name=inferName(text);
+    const style=els.style.value;
+    let screens=[];
+    const lines=text.split('\n');
+    const screenHeaders=[];
+    lines.forEach((line,i)=>{
+      const m=line.match(/^\s*(?:#{1,4}\s*)?(?:screen|page|step|view)\s*(?:\d+)?\s*[:\-]\s*(.+)$/i) || line.match(/^\s*(?:#{1,4}\s+)(.+)$/);
+      if(m && m[1].trim().length<70) screenHeaders.push({i,name:titleCase(m[1].trim())});
+    });
+    if(screenHeaders.length){
+      screenHeaders.forEach((h,idx)=>{
+        const block=lines.slice(h.i+1,screenHeaders[idx+1]?.i??lines.length).join('\n');
+        const fields=inferFields(block), buttons=inferButtons(block);
+        screens.push({name:h.name,heading:h.name,intro:inferIntro(block),fields,buttons:buttons.length?buttons:defaultButtonFor(h.name,idx,screenHeaders.length)});
+      });
+    } else {
+      const low=text.toLowerCase();
+      if(/login|sign in/.test(low)) screens.push({name:'Sign in',heading:'Sign in',intro:'Enter your details to continue.',fields:['Email address','Password'],buttons:['Sign in']});
+      screens.push({name:'Home',heading:name,intro:inferIntro(text)||'Choose what you want to do.',fields:[],buttons:homeActions(text)});
+      if(/search|find|filter/.test(low)) screens.push({name:'Search',heading:'Search',intro:'Find the information you need.',fields:['Search'],buttons:['Search','Back']});
+      const allFields=inferFields(text);
+      if(allFields.length) screens.push({name:'Details',heading:'Enter details',intro:'Complete the information below.',fields:allFields,buttons:['Save and continue','Back']});
+      if(/review|check|summary|confirm|submit/.test(low)) screens.push({name:'Review',heading:'Check your answers',intro:'Review the information before submitting.',fields:[],buttons:['Submit','Back']});
+      if(/dashboard|report|analytics|status|cases|claims|orders/.test(low)) screens.splice(1,0,{name:'Dashboard',heading:'Dashboard',intro:'Overview and recent activity.',fields:[],buttons:['View records','Add new','Search']});
+      if(/submit|confirmation|success|complete|sent|saved/.test(low)) screens.push({name:'Confirmation',heading:'Complete',intro:'Your information has been submitted successfully.',fields:[],buttons:['Return home']});
+    }
+    if(!screens.length) screens=defaultScreens(name);
+    if(screens.length===1) screens.push({name:'Next step',heading:'Next step',intro:'Continue through the prototype.',fields:[],buttons:['Continue','Back']});
+    return {name,style,theme:els.theme.value,screens:normaliseScreens(screens)};
+  }
+
+  function inferIntro(block){
+    return (block.split(/\n/).map(x=>x.trim().replace(/^[-*•]\s*/,''))
+      .find(x=>x.length>18&&x.length<150&&!/^(field|button|action|input|screen|page|step)\s*[:\-]/i.test(x))||'').slice(0,180);
+  }
+  function homeActions(text){
+    const a=[]; if(/search|find/.test(text.toLowerCase()))a.push('Search'); if(/add|create|new/.test(text.toLowerCase()))a.push('Add new'); if(/view|list|record|case|claim|order/.test(text.toLowerCase()))a.push('View records'); return a.length?a:['Get started'];
+  }
+  function defaultButtonFor(name,idx,total){if(/confirm|complete|success/.test(name.toLowerCase()))return ['Return home']; if(idx===total-1)return ['Submit','Back']; return idx===0?['Continue']:['Save and continue','Back'];}
+  function normaliseScreens(screens){
+    return screens.map((s,i)=>({name:titleCase(s.name||`Screen ${i+1}`),heading:s.heading||s.name||`Screen ${i+1}`,intro:s.intro||'',fields:uniq(s.fields||[]),buttons:uniq(s.buttons||[])}));
+  }
+
+  async function aiAnalyse(text){
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),9000);
+    try{
+      const r=await fetch('/api/analyse',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text,style:els.style.value}),signal:ctl.signal});
+      clearTimeout(t); if(!r.ok) throw new Error('AI not available');
+      const data=await r.json(); if(!data?.spec?.screens?.length) throw new Error('No spec returned');
+      return {...data.spec,style:data.spec.style||els.style.value,theme:data.spec.theme||els.theme.value,screens:normaliseScreens(data.spec.screens)};
+    }catch(e){clearTimeout(t);return null;}
+  }
+
+  async function analyseSource(){
+    clearStatus(); const text=els.source.value.trim();
+    if(!text){showStatus('Add some text or upload a supported file first.','warn');return;}
+    els.analyse.disabled=true; els.analyse.textContent='Analysing…';
+    const ai=await aiAnalyse(text);
+    spec=ai||localAnalyse(text); spec.style=els.style.value; spec.theme=els.theme.value;
+    els.appName.value=spec.name; renderSpec(); buildPrototype();
+    showStatus(ai?'AI analysis complete — review the generated app plan.':'Local analysis complete — AI was not configured, so the built-in prototype builder was used.',ai?'good':'warn');
+    els.analyse.disabled=false; els.analyse.textContent='Analyse source';
+  }
+
+  function renderSpec(){
+    spec.name=els.appName.value||spec.name||'My Prototype';
+    els.screenCount.textContent=spec.screens.length;
+    els.controlCount.textContent=spec.screens.reduce((n,s)=>n+s.fields.length+s.buttons.length,0);
+    if(!spec.screens.length){els.screenList.innerHTML='<div class="help">Analyse your source to generate the first app plan.</div>';return;}
+    els.screenList.innerHTML=spec.screens.map((s,i)=>`<div class="screenItem" data-i="${i}"><div class="screenTop"><span class="badge">${i+1}</span><input class="field screenName" data-i="${i}" value="${esc(s.name)}" aria-label="Screen name"><div class="screenActions"><button class="tinyIcon editScreen" data-i="${i}" title="Edit">✎</button><button class="tinyIcon moveUp" data-i="${i}" title="Move up">↑</button><button class="tinyIcon moveDown" data-i="${i}" title="Move down">↓</button><button class="tinyIcon deleteScreen" data-i="${i}" title="Delete">×</button></div></div><div class="screenMeta">${s.fields.length} field${s.fields.length===1?'':'s'} · ${s.buttons.length} action${s.buttons.length===1?'':'s'}</div></div>`).join('');
+  }
+
+  function buildPrototype(){
+    if(!spec.screens.length){showStatus('Generate an app plan first.','warn');return;}
+    spec.name=els.appName.value.trim()||'My Prototype'; spec.style=els.style.value; spec.theme=els.theme.value;
+    lastPrototype=prototypeHtml(spec);
+    els.frame.srcdoc=lastPrototype; els.frame.style.display='block'; els.empty.style.display='none';
+  }
+
+  function prototypeHtml(s){
+    const themeMap={blue:['#0b5fff','#073fbd','#eef4ff'],green:['#087443','#065b35','#eaf7f0'],purple:['#6d40c6','#5530a1','#f3edff'],slate:['#334155','#1e293b','#f1f5f9']};
+    let [brand,brand2,tint]=themeMap[s.theme]||themeMap.blue;
+    const gov=s.style==='govuk', dash=s.style==='dashboard', mobile=s.style==='mobile';
+    if(gov){brand='#1d70b8';brand2='#003078';tint='#f3f2f1'}
+    const nav=s.screens.map((x,i)=>`<button class="navBtn ${i===0?'active':''}" data-screen="${i}">${esc(x.name)}</button>`).join('');
+    const screens=s.screens.map((x,i)=>screenHtml(x,i,s.screens,gov,dash)).join('');
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(s.name)}</title><style>
+      :root{--brand:${brand};--brand2:${brand2};--tint:${tint};--ink:#111827;--muted:#596273;--line:#d8dee6}*{box-sizing:border-box}body{margin:0;font-family:${gov?'Arial,Helvetica,sans-serif':'Inter,system-ui,-apple-system,Segoe UI,sans-serif'};color:var(--ink);background:${dash?'#f3f6f9':'#fff'}}button,input,select,textarea{font:inherit}.appHeader{background:${gov?'#0b0c0c':'#111827'};color:#fff;padding:0 22px;height:${gov?'72px':'62px'};display:flex;align-items:center;gap:16px}.brand{font-size:${gov?'24px':'17px'};font-weight:900}.prototypeTag{font-size:10px;border:1px solid #8893a3;padding:3px 6px;border-radius:4px;opacity:.9}.shell{display:flex;min-height:calc(100vh - ${gov?'72px':'62px'})}.side{width:${dash?'215px':'175px'};border-right:1px solid var(--line);padding:14px 10px;background:${dash?'#fff':'#fafbfc'}}.navBtn{display:block;width:100%;border:0;background:transparent;text-align:left;padding:10px 11px;border-radius:7px;margin-bottom:4px;color:#344054;cursor:pointer}.navBtn.active{background:var(--tint);color:var(--brand2);font-weight:800}.main{flex:1;min-width:0}.wrap{max-width:${gov?'880px':'930px'};margin:0 auto;padding:${gov?'38px 30px':'30px 26px 60px'}}.crumb{font-size:12px;color:#667085;margin-bottom:16px}.screen{display:none}.screen.active{display:block}h1{font-size:${gov?'38px':'31px'};line-height:1.1;margin:0 0 12px;letter-spacing:-.02em}.lede{font-size:${gov?'19px':'16px'};line-height:1.55;color:#4b5563;max-width:700px;margin-bottom:25px}.fieldGroup{margin-bottom:19px;max-width:580px}.label{display:block;font-weight:800;margin-bottom:7px}.hint{font-size:12px;color:#667085;margin:-3px 0 7px}.input{width:100%;border:${gov?'2px solid #0b0c0c':'1px solid #aeb8c5'};border-radius:${gov?'0':'7px'};padding:11px 12px;background:#fff;outline:none}.input:focus{border-color:${gov?'#0b0c0c':'var(--brand)'};box-shadow:${gov?'0 0 0 3px #ffdd00':'0 0 0 3px rgba(11,95,255,.12)'}}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:26px}.btn{border:1px solid var(--brand);background:var(--brand);color:#fff;padding:${gov?'10px 18px':'10px 15px'};border-radius:${gov?'0':'7px'};font-weight:800;cursor:pointer;box-shadow:${gov?'0 2px 0 #002d18':'none'}.btn:hover{background:var(--brand2)}.btn.secondary{background:#fff;color:#374151;border-color:#aeb8c5;box-shadow:none}.notice{border-left:5px solid var(--brand);background:var(--tint);padding:14px 16px;margin:18px 0}.summary{border:1px solid var(--line);border-radius:${gov?'0':'9px'};overflow:hidden;margin:20px 0}.summaryRow{display:grid;grid-template-columns:180px 1fr auto;border-bottom:1px solid var(--line);padding:11px 13px;gap:10px}.summaryRow:last-child{border-bottom:0}.summaryKey{font-weight:800}.summaryVal{color:#4b5563}.link{color:${gov?'#1d70b8':'var(--brand2)'};text-decoration:underline;cursor:pointer;background:0;border:0}.dashCards{display:grid;grid-template-columns:repeat(3,minmax(140px,1fr));gap:12px;margin-bottom:24px}.dashCard{border:1px solid var(--line);border-radius:10px;padding:16px;background:#fff}.dashCard b{font-size:28px;display:block}.dashCard span{font-size:12px;color:#6b7280}.results{border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:18px}.resultRow{display:grid;grid-template-columns:1fr auto;padding:13px;border-bottom:1px solid var(--line)}.resultRow:last-child{border-bottom:0}.toast{position:fixed;right:16px;bottom:16px;background:#102033;color:#fff;padding:11px 14px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.2);display:none}.toast.show{display:block}@media(max-width:700px){.side{display:none}.wrap{padding:24px 18px 50px}.dashCards{grid-template-columns:1fr}.summaryRow{grid-template-columns:1fr}.appHeader{padding:0 15px}h1{font-size:29px}}
+      ${mobile?'.appHeader{background:var(--brand)}.wrap{max-width:520px}.shell{background:#f4f7fb}.main{background:#fff;max-width:520px;margin:0 auto;box-shadow:0 0 25px rgba(0,0,0,.05)}':''}
+    </style></head><body><header class="appHeader"><div class="brand">${esc(s.name)}</div><span class="prototypeTag">PROTOTYPE</span></header><div class="shell"><aside class="side">${nav}</aside><main class="main"><div class="wrap"><div class="crumb" id="crumb">${esc(s.screens[0].name)}</div>${screens}</div></main></div><div id="toast" class="toast"></div><script>
+      const screens=[...document.querySelectorAll('.screen')], nav=[...document.querySelectorAll('.navBtn')]; let current=0; const data={};
+      function show(i){i=Math.max(0,Math.min(i,screens.length-1)); current=i;screens.forEach((x,n)=>x.classList.toggle('active',n===i));nav.forEach((x,n)=>x.classList.toggle('active',n===i));document.getElementById('crumb').textContent=nav[i]?.textContent||'Screen';window.scrollTo(0,0)}
+      nav.forEach((b,i)=>b.onclick=()=>show(i));
+      document.addEventListener('input',e=>{if(e.target.matches('[data-field]'))data[e.target.dataset.field]=e.target.value});
+      document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action.toLowerCase();if(a.includes('back'))return show(current-1);if(a.includes('home'))return show(0);if(a.includes('delete'))return toast('Deleted in prototype');if(a.includes('search')){toast('Search completed');return}if(a.includes('edit')){toast('Edit mode opened');return}if(a.includes('add new'))return show(Math.min(current+1,screens.length-1));if(/submit|confirm|save|continue|next|get started|sign in|login|view/.test(a))return show(Math.min(current+1,screens.length-1));toast(b.textContent+' clicked')});
+      function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)} show(0);
+    <\/script></body></html>`;
+  }
+
+  function screenHtml(x,i,all,gov,dash){
+    const isReview=/review|check|summary/i.test(x.name), isConfirm=/confirm|complete|success/i.test(x.name), isDash=/dashboard|overview/i.test(x.name), isSearch=/search|find/i.test(x.name);
+    let body='';
+    if(isDash||dash&&i===0) body+=`<div class="dashCards"><div class="dashCard"><b>24</b><span>Open items</span></div><div class="dashCard"><b>7</b><span>Due today</span></div><div class="dashCard"><b>91%</b><span>Completed</span></div></div>`;
+    if(isConfirm) body+=`<div class="notice"><strong>Prototype journey complete</strong><div style="margin-top:5px">Reference: PF-${Math.floor(100000+Math.random()*899999)}</div></div>`;
+    if(isReview){body+=`<div class="summary"><div class="summaryRow"><div class="summaryKey">Name</div><div class="summaryVal">Alex Example</div><button class="link" data-action="Edit">Change</button></div><div class="summaryRow"><div class="summaryKey">Email</div><div class="summaryVal">alex@example.com</div><button class="link" data-action="Edit">Change</button></div><div class="summaryRow"><div class="summaryKey">Status</div><div class="summaryVal">Ready to submit</div><span></span></div></div>`;}
+    else {
+      x.fields.forEach(f=>{const low=f.toLowerCase(),type=/email/.test(low)?'email':/date/.test(low)?'date':/phone|mobile/.test(low)?'tel':/password/.test(low)?'password':/amount|cost|price/.test(low)?'number':'text';body+=`<div class="fieldGroup"><label class="label">${esc(f)}</label>${/search/.test(low)?'<div class="hint">Enter a word, name or reference</div>':''}<input class="input" data-field="${esc(slug(f))}" type="${type}" placeholder="${/search/.test(low)?'Search…':''}"></div>`});
+      if(isSearch) body+=`<div class="results"><div class="resultRow"><div><b>Example record 001</b><div style="font-size:12px;color:#667085">Open · Updated today</div></div><button class="link" data-action="View">View</button></div><div class="resultRow"><div><b>Example record 002</b><div style="font-size:12px;color:#667085">In progress</div></div><button class="link" data-action="View">View</button></div></div>`;
+    }
+    const buttons=x.buttons.map((b,bi)=>`<button class="btn ${bi>0?'secondary':''}" data-action="${esc(b)}">${esc(b)}</button>`).join('');
+    return `<section class="screen ${i===0?'active':''}" data-screen-index="${i}"><h1>${esc(x.heading||x.name)}</h1>${x.intro?`<div class="lede">${esc(x.intro)}</div>`:''}${body}<div class="actions">${buttons||`<button class="btn" data-action="Continue">Continue</button>`}</div></section>`;
+  }
+
+  function applyCommand(raw){
+    const cmd=(raw||'').trim(); if(!cmd)return;
+    const low=cmd.toLowerCase(); let changed=true;
+    let m=cmd.match(/(?:change|rename|set)\s+(?:the\s+)?(?:app\s+)?title\s+(?:to\s+)?["']?(.+?)["']?$/i);
+    if(m){spec.name=m[1].trim();els.appName.value=spec.name;}
+    else if(/gov\.?uk|government style/.test(low)){els.style.value='govuk';spec.style='govuk';}
+    else if(/dashboard style/.test(low)){els.style.value='dashboard';spec.style='dashboard';}
+    else if(/mobile style|make it mobile/.test(low)){els.style.value='mobile';spec.style='mobile';}
+    else if((m=cmd.match(/add (?:a |an )?(.+?) (?:screen|page)$/i))){addNamedScreen(m[1]);}
+    else if(/add (?:a )?login|add (?:a )?sign in/.test(low)){addNamedScreen('Sign in');}
+    else if(/add (?:a )?confirmation/.test(low)){addNamedScreen('Confirmation');}
+    else if(/add search/.test(low)){addNamedScreen('Search');}
+    else if((m=cmd.match(/add (?:a |an )?(.+?) field/i))){const target=spec.screens.find(s=>/detail|form|new|add|enter/i.test(s.name))||spec.screens[0];target.fields.push(titleCase(m[1]));target.fields=uniq(target.fields);}
+    else if((m=cmd.match(/add (?:a )?button (?:called |named )?["']?(.+?)["']?$/i))){spec.screens[0].buttons.push(titleCase(m[1]));spec.screens[0].buttons=uniq(spec.screens[0].buttons);}
+    else if(/green/.test(low)){els.theme.value='green';spec.theme='green';}
+    else if(/purple/.test(low)){els.theme.value='purple';spec.theme='purple';}
+    else if(/slate|grey|gray/.test(low)){els.theme.value='slate';spec.theme='slate';}
+    else changed=false;
+    if(changed){renderSpec();buildPrototype();els.command.value='';} else alert('I did not understand that instruction yet. Try “add a confirmation screen”, “add a name field”, “make it GOV.UK”, or “change title to …”.');
+  }
+
+  function addNamedScreen(name){
+    name=titleCase(name); const low=name.toLowerCase();
+    let s={name,heading:name,intro:'',fields:[],buttons:['Continue','Back']};
+    if(/login|sign in/.test(low))s={name:'Sign in',heading:'Sign in',intro:'Enter your details to continue.',fields:['Email address','Password'],buttons:['Sign in']};
+    if(/confirm|complete|success/.test(low))s={name:'Confirmation',heading:'Complete',intro:'Your information has been submitted successfully.',fields:[],buttons:['Return home']};
+    if(/search|find/.test(low))s={name:'Search',heading:'Search',intro:'Find the information you need.',fields:['Search'],buttons:['Search','Back']};
+    spec.screens.push(s);
+  }
+
+  async function handleFile(file){
+    if(!file)return; clearStatus(); activeFileDataUrl='';
+    const ext=(file.name.split('.').pop()||'').toLowerCase();
+    els.sourcePreview.style.display='block'; els.sourcePreview.innerHTML=`<div class="fileName">${esc(file.name)}</div><div class="help">${(file.size/1024).toFixed(1)} KB · reading…</div>`;
+    try{
+      if(file.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','heic','heif'].includes(ext)){
+        activeFileDataUrl=await readDataUrl(file);
+        els.sourcePreview.innerHTML=`<div class="fileName">${esc(file.name)}</div><div class="help">${(file.size/1024).toFixed(1)} KB · photo loaded</div><img id="uploadedSourceImage" src="${activeFileDataUrl}" alt="Uploaded source image"><div class="help" style="margin-top:7px">Photo is now attached to this prototype source. Add any labels or behaviour you want beneath it, then press Analyse source.</div>`;
+        const img=$('#uploadedSourceImage');
+        await new Promise((resolve,reject)=>{if(img.complete){img.naturalWidth?resolve():reject(new Error('The selected image could not be displayed'));return;}img.onload=resolve;img.onerror=()=>reject(new Error('The selected image could not be displayed'));});
+        if(!els.source.value.trim()) els.source.value=`Prototype based on uploaded photo: ${file.name}\n\nScreen: Main screen\nButton: Continue`;
+        showStatus('Photo loaded successfully — you should see its preview above. Press Analyse source when ready.','good'); return;
+      }
+      if(['txt','md','csv','json','html','xml'].includes(ext)||file.type.startsWith('text/')){
+        els.source.value=await file.text(); finishFile(file); return;
+      }
+      if(ext==='docx'){
+        await ensureScript('https://cdn.jsdelivr.net/npm/mammoth@1.9.1/mammoth.browser.min.js','mammoth');
+        const buf=await file.arrayBuffer(); const r=await window.mammoth.extractRawText({arrayBuffer:buf}); els.source.value=r.value||''; finishFile(file); return;
+      }
+      if(ext==='pdf'){
+        await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','pdfjsLib');
+        if(!window.pdfjsLib) throw new Error('PDF reader could not load');
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise; let out='';
+        for(let p=1;p<=Math.min(pdf.numPages,60);p++){const page=await pdf.getPage(p);const tc=await page.getTextContent();out+=`\n\n--- Page ${p} ---\n`+tc.items.map(x=>x.str).join(' ')}
+        els.source.value=out.trim(); finishFile(file); return;
+      }
+      els.source.value=await file.text(); finishFile(file);
+    }catch(err){showStatus(`Could not extract this file automatically: ${err.message}. You can still paste its requirements into the text box.`,'bad');els.sourcePreview.innerHTML=`<div class="fileName">${esc(file.name)}</div><div class="help">File loaded, but text extraction was unavailable.</div>`;}
+  }
+  function finishFile(file){els.sourcePreview.innerHTML=`<div class="fileName">${esc(file.name)}</div><div class="help">Text extracted successfully. Press Analyse source.</div>`;showStatus('File text extracted successfully.','good');}
+  function readDataUrl(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});}
+  function ensureScript(src,global,isModule=false){return new Promise((res,rej)=>{if(window[global])return res();const s=document.createElement('script');s.src=src;if(isModule)s.type='module';s.onload=()=>setTimeout(res,50);s.onerror=()=>rej(new Error('Required reader library failed to load'));document.head.appendChild(s)});}
+
+  function exportHtml(){
+    if(!lastPrototype)buildPrototype(); if(!lastPrototype)return;
+    const blob=new Blob([lastPrototype],{type:'text/html'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${slug(spec.name)}-prototype.html`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+  function saveProject(){spec.name=els.appName.value||spec.name;spec.style=els.style.value;spec.theme=els.theme.value;localStorage.setItem('protoforge-project',JSON.stringify({spec,source:els.source.value}));showStatus('Project saved in this browser.','good');}
+  function loadProject(){try{const raw=localStorage.getItem('protoforge-project');if(!raw)return;const p=JSON.parse(raw);if(p.spec){spec=p.spec;els.source.value=p.source||'';els.appName.value=spec.name||'My Prototype';els.style.value=spec.style||'modern';els.theme.value=spec.theme||'blue';renderSpec();if(spec.screens.length)buildPrototype();}}catch(e){}}
+  function newProject(){if(!confirm('Start a new project? Your saved project will stay saved until you press Save again.'))return;spec=freshSpec();lastPrototype='';activeFileDataUrl='';els.source.value='';els.file.value='';els.photo.value='';els.appName.value='My Prototype';els.style.value='modern';els.theme.value='blue';els.frame.style.display='none';els.empty.style.display='block';els.sourcePreview.style.display='none';clearStatus();renderSpec();}
+
+  function openEdit(i){editingIndex=i;const s=spec.screens[i];if(!s)return;els.editName.value=s.name;els.editHeading.value=s.heading;els.editIntro.value=s.intro;els.editFields.value=s.fields.join('\n');els.editButtons.value=s.buttons.join('\n');els.modal.classList.add('show');}
+  function closeEdit(){els.modal.classList.remove('show');editingIndex=-1;}
+  function saveEdit(){if(editingIndex<0)return;spec.screens[editingIndex]={name:els.editName.value.trim()||`Screen ${editingIndex+1}`,heading:els.editHeading.value.trim()||els.editName.value.trim(),intro:els.editIntro.value.trim(),fields:uniq(els.editFields.value.split('\n')),buttons:uniq(els.editButtons.value.split('\n'))};closeEdit();renderSpec();buildPrototype();}
+
+  els.analyse.addEventListener('click',analyseSource); els.build.addEventListener('click',buildPrototype); els.export.addEventListener('click',exportHtml); els.save.addEventListener('click',saveProject); els.newBtn.addEventListener('click',newProject); els.refresh.addEventListener('click',buildPrototype);
+  els.appName.addEventListener('change',()=>{spec.name=els.appName.value;buildPrototype()}); els.style.addEventListener('change',()=>{spec.style=els.style.value;if(spec.screens.length)buildPrototype()}); els.theme.addEventListener('change',()=>{spec.theme=els.theme.value;if(spec.screens.length)buildPrototype()});
+  els.addScreen.addEventListener('click',()=>{addNamedScreen(`Screen ${spec.screens.length+1}`);renderSpec();openEdit(spec.screens.length-1)});
+  els.commandBtn.addEventListener('click',()=>applyCommand(els.command.value)); els.command.addEventListener('keydown',e=>{if(e.key==='Enter')applyCommand(els.command.value)});
+  function wireFileInput(input){
+    input.addEventListener('change',async e=>{
+      const picked=e.target.files && e.target.files[0];
+      if(picked) await handleFile(picked);
+      // Allow the same photo/document to be selected again later.
+      e.target.value='';
+    });
+  }
+  wireFileInput(els.file); wireFileInput(els.photo);
+  ['dragenter','dragover'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.add('drag')})); ['dragleave','drop'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.remove('drag')})); els.drop.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
+  $$('.deviceGroup button').forEach(b=>b.addEventListener('click',()=>{$$('.deviceGroup button').forEach(x=>x.classList.remove('active'));b.classList.add('active');els.device.className='device '+b.dataset.device}));
+  els.screenList.addEventListener('change',e=>{if(e.target.classList.contains('screenName')){const i=+e.target.dataset.i;spec.screens[i].name=e.target.value;spec.screens[i].heading=spec.screens[i].heading||e.target.value;buildPrototype()}});
+  els.screenList.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i;if(b.classList.contains('editScreen'))openEdit(i);if(b.classList.contains('deleteScreen')){spec.screens.splice(i,1);renderSpec();buildPrototype()}if(b.classList.contains('moveUp')&&i>0){[spec.screens[i-1],spec.screens[i]]=[spec.screens[i],spec.screens[i-1]];renderSpec();buildPrototype()}if(b.classList.contains('moveDown')&&i<spec.screens.length-1){[spec.screens[i+1],spec.screens[i]]=[spec.screens[i],spec.screens[i+1]];renderSpec();buildPrototype()}});
+  $('#closeModal').onclick=closeEdit; $('#cancelModal').onclick=closeEdit; $('#saveScreenEdit').onclick=saveEdit; els.modal.addEventListener('click',e=>{if(e.target===els.modal)closeEdit()});
+  loadProject(); renderSpec();
+})();
+</script>
+</body>
+</html>
