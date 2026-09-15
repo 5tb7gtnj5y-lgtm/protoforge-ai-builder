@@ -1,30 +1,23 @@
-# ProtoForge AI Builder
+# Mockingbird Prototype Agent
 
-ProtoForge turns an uploaded image or document plus a plain-English build instruction into an editable, working web prototype.
+Mockingbird turns an uploaded image, PDF, Word/text file, or pasted brief into a working browser prototype.
+
+After the first build, the same instruction box becomes a revision agent: ask for changes and Mockingbird modifies the existing prototype instead of starting again.
 
 ## Features
 
-- Upload images, text, Markdown, CSV, JSON, HTML, XML, DOCX, and PDF files.
-- Send images and instructions together to Google Gemini's no-card free tier, with Vercel AI Gateway as an automatic fallback.
-- Generate both a screen-by-screen specification and a self-contained interactive HTML prototype.
-- Fall back to a basic local builder if AI is unavailable.
-- Preview, edit, save, and export a standalone HTML prototype.
-- Check deployment status at `/api/health`.
+- Image/file upload plus plain-English instructions.
+- Image-to-prototype and file-to-prototype generation.
+- Iterative revisions using the current prototype as working context.
+- Functional controls rather than a static mock-up.
+- Desktop, tablet and mobile preview modes.
+- Undo/version history and standalone HTML export.
+- Browser-local fallback if the AI route is temporarily unavailable.
+- `GET /api/health` reports service and AI configuration.
+- `POST /api/analyse` builds or revises the prototype.
 
-## Local development
+## AI
 
-```bash
-npm install
-npx vercel link
-npx vercel env pull .env.local
-npm run dev
-```
+Mockingbird uses Vercel AI Gateway by default. A Google AI Studio key can also be supplied through `GOOGLE_GENERATIVE_AI_API_KEY`, `GEMINI_API_KEY`, or `GOOGLE_API_KEY`.
 
-Add a free Google AI Studio key as `GOOGLE_GENERATIVE_AI_API_KEY` in Vercel. ProtoForge then uses `gemini-3.8-flash` directly, so Vercel billing is not required. The Google free tier may use uploaded content to improve its products, so it is not suitable for sensitive documents.
-
-If no Google key is configured, ProtoForge tries `inclusionai/ling-3.0-flash-vl-free` through Vercel AI Gateway. Some Vercel accounts require a payment method even for that zero-cost model.
-
-## API
-
-- `GET /api/health` returns deployment and AI Gateway configuration status.
-- `POST /api/analyse` accepts an instruction, extracted source text, an optional image data URL, file name, and style. It returns the structured specification and complete working HTML.
+The generated prototype is returned as one self-contained HTML document with inline CSS and JavaScript, so it can be exported and opened independently.
