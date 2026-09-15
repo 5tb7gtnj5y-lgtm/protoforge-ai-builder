@@ -1,0 +1,8 @@
+node_modules/
+.vercel/
+.env*
+!.env.example
+npm-debug.log*
+.DS_Store
+protoforge_source/
+protoforge-ai-builder/
