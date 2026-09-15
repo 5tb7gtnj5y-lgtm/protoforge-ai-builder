@@ -5,7 +5,7 @@ ProtoForge turns an uploaded image or document plus a plain-English build instru
 ## Features
 
 - Upload images, text, Markdown, CSV, JSON, HTML, XML, DOCX, and PDF files.
-- Send images and instructions together to a vision-capable model through Vercel AI Gateway.
+- Send images and instructions together to the free, vision-capable Ling 3.0 Flash VL model through Vercel AI Gateway.
 - Generate both a screen-by-screen specification and a self-contained interactive HTML prototype.
 - Fall back to a basic local builder if AI is unavailable.
 - Preview, edit, save, and export a standalone HTML prototype.
@@ -20,7 +20,7 @@ npx vercel env pull .env.local
 npm run dev
 ```
 
-Vercel supplies OIDC authentication automatically to production functions. The optional `AI_GATEWAY_MODEL` environment variable overrides the default model.
+Vercel supplies OIDC authentication automatically to production functions. The default AI Gateway model is `inclusionai/ling-3.0-flash-vl-free`, which Vercel currently lists at zero input and output token cost. The optional `AI_GATEWAY_MODEL` environment variable overrides it.
 
 ## API
 

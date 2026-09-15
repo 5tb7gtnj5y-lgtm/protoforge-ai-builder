@@ -1,5 +1,6 @@
 const SERVICE = "protoforge-ai-builder";
-const MODEL = process.env.AI_GATEWAY_MODEL || "openai/gpt-5.6-sol";
+const MODEL =
+  process.env.AI_GATEWAY_MODEL || "inclusionai/ling-3.0-flash-vl-free";
 
 export default function handler(request, response) {
   response.setHeader("Cache-Control", "no-store");
@@ -15,7 +16,7 @@ export default function handler(request, response) {
   return response.status(200).json({
     status: "ok",
     service: SERVICE,
-    version: "2.0.0",
+    version: "2.1.0",
     environment: process.env.VERCEL_ENV || "local",
     aiGateway: {
       configured: true,
@@ -23,6 +24,7 @@ export default function handler(request, response) {
         ? "api-key"
         : "vercel-oidc",
       model: MODEL,
+      pricing: MODEL.endsWith("-free") ? "free" : "provider-rate",
     },
     timestamp: new Date().toISOString(),
   });

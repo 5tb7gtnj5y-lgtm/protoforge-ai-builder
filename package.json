@@ -1,6 +1,6 @@
 {
   "name": "protoforge-ai-builder",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Turn an uploaded image or document plus an instruction into a working web prototype.",
   "type": "module",
